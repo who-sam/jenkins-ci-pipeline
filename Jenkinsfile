@@ -1,60 +1,39 @@
 pipeline {
-    agent any
+  agent any
+  environment {
+    DOCKERHUB_REPO = "ahmedlebshten/helloapp"      
+    IMAGE_TAG = "${env.BUILD_NUMBER}"
+  }
+  stages {
+    stage('Checkout') { steps { checkout scm } }
 
-    environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credential')  
-        IMAGE_NAME = 'ahmedlebshten/helloapp'         
+    stage('Build Docker Image') {
+      steps {
+        sh "docker build -t ${DOCKERHUB_REPO}:${IMAGE_TAG} ."
+        sh "docker tag ${DOCKERHUB_REPO}:${IMAGE_TAG} ${DOCKERHUB_REPO}:latest"
+      }
     }
 
-    stages {
-        stage('Checkout Code') {
-            steps {
-                 echo "📦 Cloning source code..."
-                 git branch: 'master', url: 'https://github.com/Ahmedlebshten/Jenkins-CI-Pipeline'
-            }
+    stage('Docker Login') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'dockerhub-cred',
+                                          usernameVariable: 'DH_USER',
+                                          passwordVariable: 'DH_PASS')]) {
+          sh 'echo $DH_PASS | docker login -u $DH_USER --password-stdin'
         }
-
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    echo "🐳 Building Docker image..."
-                    sh "docker build -t ${IMAGE_NAME}:latest ."
-                }
-            }
-        }
-
-        stage('Login to Docker Hub') {
-            steps {
-                script {
-                    echo "🔑 Logging into Docker Hub..."
-                    sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
-                }
-            }
-        }
-
-        stage('Push Image to Docker Hub') {
-            steps {
-                script {
-                    echo "🚀 Pushing image to Docker Hub..."
-                    sh "docker push ${IMAGE_NAME}:latest"
-                }
-            }
-        }
-
-        stage('Clean Up') {
-            steps {
-                echo "🧹 Removing local images..."
-                sh "docker rmi ${IMAGE_NAME}:latest || true"
-            }
-        }
+      }
     }
 
-    post {
-        success {
-            echo "✅ Docker image built and pushed successfully!"
-        }
-        failure {
-            echo "❌ Pipeline failed. Please check logs."
-        }
+    stage('Push Docker Image') {
+      steps {
+        sh "docker push ${DOCKERHUB_REPO}:${IMAGE_TAG}"
+        sh "docker push ${DOCKERHUB_REPO}:latest"
+      }
     }
+  }
+
+  post {
+    success { echo "Done: ${DOCKERHUB_REPO}:${IMAGE_TAG}" }
+    failure { echo "Failed" }
+  }
 }
