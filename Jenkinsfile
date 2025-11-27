@@ -18,7 +18,7 @@ pipeline {
             steps {
                 // Clone the helloapp repo for manifests (in a different directory)
                 dir('manifests-repo') {
-                    git branch: 'main', url: 'https://github.com/whosam1/helloapp.git'
+                    git branch: 'main', url: 'https://github.com/who-sam/argocd-pipeline.git'
                 }
             }
         }
@@ -80,7 +80,7 @@ pipeline {
                     git config user.email "jenkins@example.com"
                     git add ArgoCD-Pipeline/
                     git commit -m "CI: Update Notes App image tags to ${GIT_COMMIT}"
-                    git push https://${GITHUB_TOKEN}@github.com/whosam1/helloapp.git main
+                    git push https://${GITHUB_TOKEN}@github.com/whosam1/argocd-pipeline.git main
                     '''
                 }
             }
