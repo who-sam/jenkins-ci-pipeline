@@ -102,21 +102,23 @@ pipeline {
             steps {
                 script {
                     // Fix: Update the correct path (remove ArgoCD-Pipeline subdirectory)
-                    sh """
-                    # Update frontend deployment with new image
-                    sed -i 's|image: .*/notes-app-frontend:.*|image: $FRONTEND_IMAGE:$IMAGE_TAG|' manifests-repo/frontend-deployment.yaml
+                    dir('manifests-repo') {
+                        sh """
+                        # Update frontend deployment with new image
+                        sed -i 's|image: whosam1/notes-app-frontend:.*|image: $FRONTEND_IMAGE:$IMAGE_TAG|' frontend-deployment.yaml
 
-                    # Update backend deployment with new image
-                    sed -i 's|image: .*/notes-app-backend:.*|image: $BACKEND_IMAGE:$IMAGE_TAG|' manifests-repo/backend-deployment.yaml
-                    """
+                        # Update backend deployment with new image
+                        sed -i 's|image: whosam1/notes-app-backend:.*|image: $BACKEND_IMAGE:$IMAGE_TAG|' backend-deployment.yaml
+                        """
 
-                    // Verify the changes
-                    sh '''
-                    echo "=== Updated Frontend Deployment ==="
-                    cat manifests-repo/frontend-deployment.yaml | grep image:
-                    echo "=== Updated Backend Deployment ==="
-                    cat manifests-repo/backend-deployment.yaml | grep image:
-                    '''
+                        // Verify the changes
+                        sh '''
+                        echo "=== Updated Frontend Deployment ==="
+                        cat frontend-deployment.yaml | grep image:
+                        echo "=== Updated Backend Deployment ==="
+                        cat backend-deployment.yaml | grep image:
+                        '''
+                    }
                 }
             }
         }
