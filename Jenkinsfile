@@ -1,6 +1,12 @@
 pipeline {
     agent any
     
+    triggers {
+
+      githubPush()
+
+    }
+
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
         FRONTEND_IMAGE = 'whosam1/notes-app-frontend'
